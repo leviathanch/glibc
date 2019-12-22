@@ -1,4 +1,4 @@
-/* Syscall wrapper that do not set errno.  Linux powerpc version.
+/* Test that malloc tcache catches double free.
    Copyright (C) 2018 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -16,15 +16,33 @@
    License along with the GNU C Library; if not, see
    <http://www.gnu.org/licenses/>.  */
 
-/* __access_noerrno is used during process initialization in elf/dl-tunables.c
-   before the TCB is initialized, prohibiting the usage of
-   ABORT_TRANSACTION.  */
-#undef ABORT_TRANSACTION
-#define ABORT_TRANSACTION
+#include <errno.h>
+#include <error.h>
+#include <limits.h>
+#include <malloc.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/signal.h>
 
-#include "sysdeps/unix/sysv/linux/not-errno.h"
+static int
+do_test (void)
+{
+  char * volatile ptrs[20];
+  int i;
 
-/* Recover ABORT_TRANSACTION's previous value, in order to not affect
-   other syscalls.  */
-#undef ABORT_TRANSACTION
-#define ABORT_TRANSACTION ABORT_TRANSACTION_IMPL
+  /* Allocate enough small chunks so that when we free them all, the tcache
+     is full, and the first one we freed is at the end of its linked list.  */
+#define COUNT 20
+  for (i=0; i<COUNT; i++)
+    ptrs[i] = malloc (20);
+  for (i=0; i<COUNT; i++)
+    free (ptrs[i]);
+  free (ptrs[0]);
+
+  printf("FAIL: tcache double free\n");
+  return 1;
+}
+
+#define TEST_FUNCTION do_test
+#define EXPECTED_SIGNAL SIGABRT
+#include <support/test-driver.c>
