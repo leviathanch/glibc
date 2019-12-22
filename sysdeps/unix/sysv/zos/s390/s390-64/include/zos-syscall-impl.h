@@ -235,7 +235,6 @@ __map_common_oflags_to_zos (int flags)
      may not be less efficient.  */
 #define validate_shift(larger, smaller)					\
   ({ const int _sh = __builtin_ctz (larger) - __builtin_ctz (smaller);	\
-    _Static_assert (_sh > 0, "bad flag values");			\
     _sh; })
 #define shift_up(flg) \
   zflags |= (uflags & (flg)) << validate_shift (ZOS_SYS_##flg, (flg))
