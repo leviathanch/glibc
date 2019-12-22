@@ -21,9 +21,11 @@
 #ifndef _ZOS_BPX_OFFSETS_H
 #define _ZOS_BPX_OFFSETS_H 1
 #include <asm/unistd_64.h>
+#include <linux/version.h>
 
 /* Fake syscall numbers for syscalls that don't exist on s390x linux,
    but do on z/OS.  */
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5,3,12)
 #define __NR_msgctl 500
 #define __NR_msgget 501
 #define __NR_msgrcv 502
@@ -36,7 +38,7 @@
 #define __NR_shmdt 509
 #define __NR_shmget 510
 #define __NR_accept 511
-
+#endif
 
 /* BPX assembler callable services */
 
